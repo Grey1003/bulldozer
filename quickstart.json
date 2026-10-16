@@ -1,0 +1,16 @@
+{
+  "data": {
+    "symbols": ["sh.600000", "sh.600036", "sh.600519", "sz.000001", "sz.000333", "sz.000651"],
+    "chunk_months": 3,
+    "warmup_sessions": 180,
+    "min_listing_sessions": 120,
+    "request_pause_seconds": 0.05,
+    "network_timeout_seconds": 15,
+    "retries": 1
+  },
+  "periods": {
+    "train": ["2020-01-01", "2023-12-31"],
+    "validation": ["2024-01-01", "2024-12-31"],
+    "test": ["2025-01-01", "2025-12-31"]
+  }
+}

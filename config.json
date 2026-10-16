@@ -1,0 +1,77 @@
+{
+  "data": {
+    "symbols": [],
+    "chunk_months": 3,
+    "warmup_sessions": 180,
+    "min_listing_sessions": 120,
+    "request_pause_seconds": 0.05,
+    "network_timeout_seconds": 20,
+    "retries": 2
+  },
+  "periods": {
+    "train": ["2020-01-01", "2023-12-31"],
+    "validation": ["2024-01-01", "2024-12-31"],
+    "test": ["2025-01-01", "2026-10-15"]
+  },
+  "strategy": {
+    "fast_ma": 5,
+    "middle_ma": 10,
+    "slow_ma": 20,
+    "slope_days": 5,
+    "trend_days": 8,
+    "min_rising_days": 8,
+    "min_touch_days": 6,
+    "touch_min": -0.01,
+    "touch_max": 0.05,
+    "close_bias_max": 0.06,
+    "amplitude_days": 10,
+    "amplitude_min": 0.02,
+    "amplitude_max": 0.08,
+    "limit_lookback": 20,
+    "min_limit_count": 1,
+    "consecutive_lookback": 10,
+    "exclude_consecutive": 2,
+    "yesterday_return_max": 0.06,
+    "min_average_amount": 0,
+    "first_wave_filter": true,
+    "wave_lookback": 60,
+    "wave_prior_rise": 0.20,
+    "wave_drawdown": 0.10,
+    "wave_rebound": 0.08,
+    "wave_mode": "strict",
+    "prior_high_band": 0.05
+  },
+  "execution": {
+    "entry_mode": "limit_touch",
+    "buy_price_mode": "offset",
+    "buy_offset": 0.015,
+    "buy_position": 0.5,
+    "limit_penetration_ticks": 1,
+    "exit_mode": "next_open",
+    "hold_open_limit_up": true,
+    "max_holding_sessions": null,
+    "daily_buy_fraction": 0.5,
+    "max_new_positions": 5,
+    "single_position_fraction": 0.1,
+    "max_total_exposure": 1.0,
+    "lot_size": 100,
+    "tick_size": 0.01,
+    "max_volume_fraction": 0.01,
+    "slippage_bps": 5,
+    "commission_rate": 0.0003,
+    "minimum_commission": 5.0,
+    "stamp_tax_schedule": [["2008-09-19", 0.001], ["2023-08-28", 0.0005]],
+    "transfer_fee_schedule": [["2015-08-01", 0.00002], ["2022-04-29", 0.00001]],
+    "dividend_tax_assumption": 0.2,
+    "block_on_ex_rights_entry": true
+  },
+  "research": {
+    "initial_cash": 100000,
+    "minimum_closed_trades": 20,
+    "validation_shortlist": 3,
+    "grid": {
+      "execution.buy_offset": [0.01, 0.015, 0.02],
+      "execution.hold_open_limit_up": [false, true]
+    }
+  }
+}
