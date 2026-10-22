@@ -1,0 +1,17 @@
+[project]
+name = "tuituji-stock-screener"
+version = "0.1.0"
+description = "基于米筐日线的推土机形态筛选与人工看图工具"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 88

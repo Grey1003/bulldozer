@@ -1,0 +1,17 @@
+米筐设置.txt
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+data/**
+# 原始策略资料不随核心代码分发。
+/*.pdf
+/*.docx
+output/**
+!output/.gitkeep
+tmp/
+logs/
+configs/[0-9]*.json
+configs/update_*.json

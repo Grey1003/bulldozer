@@ -1,0 +1,43 @@
+{
+  "data": {
+    "root": "data/raw_20261022",
+    "credentials_file": "米筐设置.txt",
+    "years": 5,
+    "batch_size": 100
+  },
+  "strategy": {
+    "trend_days": 8,
+    "min_listing_days": 120,
+    "min_history_bars": 120,
+    "min_ma5_up_ratio": 0.875,
+    "min_bullish_ma_ratio": 0.75,
+    "max_close_ma5_distance": 0.08,
+    "max_low_ma5_distance": 0.035,
+    "min_touch_ratio": 0.75,
+    "max_below_ma5": 0.02,
+    "min_trend_return": 0.03,
+    "max_trend_return": 0.35,
+    "min_mean_amplitude": 0.02,
+    "max_mean_amplitude": 0.09,
+    "max_daily_amplitude": 0.13,
+    "max_last_return": 0.065,
+    "max_last_ma5_distance": 0.05,
+    "activity_days": 15,
+    "min_limit_up_count": 1,
+    "consecutive_limit_days": 15,
+    "max_consecutive_limit_up": 1,
+    "acceleration_days": 3,
+    "max_acceleration_ratio": 2.5,
+    "acceleration_min_return": 0.06,
+    "rebound_days": 100,
+    "rebound_min_drawdown": 0.18,
+    "rebound_peak_tolerance": 0.08,
+    "main_board_only": true,
+    "exclude_st": true
+  },
+  "report": {
+    "root": "output",
+    "chart_bars": 120,
+    "near_miss_count": 12
+  }
+}
