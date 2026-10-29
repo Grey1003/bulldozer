@@ -83,10 +83,11 @@ PNG 绘制 MA5/10/20/60，浅黄色区域为最近8日形态检查窗口，红�
 | `max_last_ma5_distance` | 0.05 | 选股日收盘不能离MA5过远 |
 | `max_last_return` | 0.065 | 选股日涨幅上限，排除末日大涨 |
 | `min_mean_amplitude` / `max_mean_amplitude` | 0.02 / 0.09 | 排除过闷或过于剧烈 |
-| `activity_days` / `min_limit_up_count` | 15 / 1 | 近15日应至少有一次收盘涨停 |
+| `min_trend_return` / `max_trend_return` | 0.06 / 0.40 | 近8日复合涨幅6%～40% |
 | `max_consecutive_limit_up` | 1 | 近15日不允许出现2连板 |
+| `ma20_touch_days` | 5 | 近5日任一天最低价≤当日MA20即剔除 |
 | `rebound_min_drawdown` | 0.18 | 旧高后回撤达到18%，视为潜在二波 |
-| `rebound_peak_tolerance` | 0.08 | 潜在二波未超过旧高8%时排除 |
+| `rebound_peak_tolerance` | 0.08 | 潜在二波未超过旧高8%时标记，仅提示 |
 | `report.near_miss_count` | 12 | 展示多少只未入选样本，不影响选股 |
 | `report.chart_bars` | 120 | 每张图展示的历史交易日数量 |
 
@@ -153,8 +154,25 @@ python -m flake8 src tests main.py download_data.py select_stocks.py
 ```
 
 测试覆盖未来行情/因子不变性、除权生效日期、无除权基准、周末、缓存边界、
-历史ST，以及末日大涨、偏离均线、低振幅、无涨停、连板、加速和二波代理规则。
+历史ST，以及末日大涨、偏离均线、低振幅、无涨停仍可通过、连板、加速和二波代理规则。
 代码已进行自动测试和自查，人工图形审阅由使用者在本地报告中完成。
+
+## 单股日期测试与门槛对照
+
+2026-10-26调整：删除“近15日必须至少一次收盘涨停”，保留“近15日不能两连板”；
+8日复合累计涨幅为6%～40%；二波反弹仅提示；新增近5日最低价触及或跌破当日MA20即剔除。
+
+```powershell
+python inspect_stock.py
+python inspect_stock.py --stock 达仁堂
+python inspect_stock.py --stock 600329 --date 2026-10-23
+python compare_rules.py --date 2026-10-23
+```
+
+单股HTML可离线选择缓存内任意日期，切换门槛线，查看12项筛选规则、二波提示及最近8日明细。
+规则对照每项各画3只通过、3只未通过股票，共24张真实K线；
+明确区分“本条通过”与“全部条件通过”，同时显示通过率、淘汰率和条件交叉后的数量。
+说明见 [docs/stock_inspection.md](docs/stock_inspection.md)。
 
 
 ## GitHub仓库中的两个入口

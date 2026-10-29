@@ -19,6 +19,8 @@ def save_static_chart(
     title: str,
     path: Path,
     trend_days: int,
+    levels: dict[str, float] | None = None,
+    split_days: int = 0,
 ) -> None:
     """绘制截至研究日的前复权 K 线、均线和未复权成交量。"""
     plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
@@ -53,6 +55,15 @@ def save_static_chart(
     axis.hlines(history["close"], x - 0.32, x + 0.32, colors=colors, linewidth=0.8)
     for window, color in MA_COLORS.items():
         axis.plot(x, history[f"ma{window}"], label=f"MA{window}", color=color, lw=1.2)
+    for label, multiple in (levels or {}).items():
+        axis.plot(
+            x,
+            history["ma5"] * multiple,
+            label=label,
+            color="#9333ea",
+            linestyle="--",
+            linewidth=1,
+        )
     axis.axvspan(
         len(history) - trend_days - 0.5,
         len(history) - 0.5,
@@ -60,6 +71,14 @@ def save_static_chart(
         alpha=0.24,
         label="形态检查窗口",
     )
+    if split_days:
+        axis.axvspan(
+            len(history) - split_days - 0.5,
+            len(history) - 0.5,
+            color="#fb923c",
+            alpha=0.2,
+            label="加速检查末段",
+        )
     limit_days = history["limit_up_hit"].to_numpy()
     axis.scatter(
         x[limit_days],
@@ -72,7 +91,7 @@ def save_static_chart(
     axis.set_title(title, fontsize=13, loc="left")
     axis.set_ylabel("研究日时点前复权价格 / 元")
     axis.autoscale_view()
-    axis.legend(loc="upper left", ncol=6, fontsize=9)
+    axis.legend(loc="upper left", ncol=4 if levels or split_days else 6, fontsize=9)
     axis.grid(alpha=0.15)
     volume_axis.bar(x, history["volume"] / 1e6, color=colors, width=0.65)
     volume_axis.set_ylabel("原始成交量\n百万股")

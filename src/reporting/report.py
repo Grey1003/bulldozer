@@ -10,6 +10,7 @@ import pandas as pd
 from src.config.settings import Settings
 from src.data.storage import write_json
 from src.reporting.charts import save_interactive_chart, save_static_chart
+from src.reporting.rule_details import rebound_details
 from src.strategy.rules import RULE_LABELS
 from src.strategy.screening import ScreenResult
 
@@ -35,12 +36,17 @@ def build_gallery(
         )
         save_interactive_chart(history, title, directory / f"{symbol}.html")
         reason = row["failed_rules"] or "全部形态规则通过"
+        rebound = rebound_details(row, settings.strategy)
         cards.append(
             f"<article><h3>{escape(title)}</h3><p>{escape(reason)}</p>"
             f'<p>{settings.strategy.trend_days}日窗口涨幅：{row["trend_return"]:.1%}；'
             f'末日距MA5：{row["last_ma5_distance"]:.1%}；'
-            f'贴线比例：{row["touch_ratio"]:.0%}；'
-            f'近期涨停：{row["limit_up_count"]:.0f} 次</p>'
+            f'贴线比例：{row["touch_ratio"]:.0%}</p>'
+            f'<p>{escape(rebound["label"])}：{escape(rebound["value"])}<br>'
+            f'{escape(rebound["threshold"])}</p>'
+            f"<p>近{settings.strategy.ma20_touch_days}日最低价距MA20最小值："
+            f'{row["min_low_ma20_distance"]:.2%}；触线日期：'
+            f'{row["ma20_touch_dates"] or "无"}</p>'
             f'<a href="charts/{symbol}.html">打开可缩放K线</a>'
             f'<img src="charts/{symbol}.png" loading="lazy" alt="{escape(symbol)} K线">'
             "</article>"
@@ -104,7 +110,10 @@ img{{width:100%;height:auto}}td,th{{padding:6px 20px;border-bottom:1px solid #dd
 <p>输入日期 {escape(requested)} → 实际交易日 {date.date()} 收盘后；
 候选 {len(selected)} 只 / 具备资格 {int(diagnostics['eligible'].sum())} 只。</p>
 <p class="notice">所有图和指标止于研究日。阈值是原文描述的可调量化近似，
-二波与加速识别仍需人工检查。未计算回测收益或交易信号。</p>
+二波反弹仅提示，不参与筛选。未计算回测收益或交易信号。</p>
+<p>近{settings.strategy.trend_days}日累计涨幅范围：
+{settings.strategy.min_trend_return:.0%}～{settings.strategy.max_trend_return:.0%}；
+近{settings.strategy.ma20_touch_days}日任一天最低价≤当日MA20即剔除（含研究日）。</p>
 <p><a href="selected.csv">入选清单</a> · <a href="diagnostics.csv">全市场逐项诊断</a> ·
 <a href="parameters.json">本次参数</a> · <a href="run.json">运行信息</a></p>
 <section><h2>规则未通过数量（同股可重复计数）</h2><table>{count_table}</table></section>

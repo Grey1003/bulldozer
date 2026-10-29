@@ -61,3 +61,21 @@ class DataStore:
             for path in sorted((self.root / "factors").glob("*.parquet"))
         ]
         return pd.concat(frames, ignore_index=True)
+
+    def read_stock(self, symbol: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """按股票代码读取完整缓存及除权事件，供历史逐日复核。"""
+        prices = pd.concat(
+            [
+                pd.read_parquet(path, filters=[("order_book_id", "==", symbol)])
+                for path in sorted((self.root / "daily").glob("*.parquet"))
+            ],
+            ignore_index=True,
+        )
+        factors = pd.concat(
+            [
+                pd.read_parquet(path, filters=[("order_book_id", "==", symbol)])
+                for path in sorted((self.root / "factors").glob("*.parquet"))
+            ],
+            ignore_index=True,
+        )
+        return prices.sort_values("date"), factors.sort_values("ex_date")

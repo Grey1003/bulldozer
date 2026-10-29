@@ -16,10 +16,9 @@ RULE_LABELS = {
     "trend_return": "爬坡涨幅适中",
     "amplitude": "日内振幅适中",
     "last_day": "末日未大涨或过度偏离",
-    "activity": "近期有涨停活跃记录",
     "no_limit_streak": "近期无连续涨停",
     "no_acceleration": "末段未突然加速",
-    "no_rebound": "未处于明显二波反弹",
+    "no_touch_ma20": "近五日最低价未触及MA20",
 }
 
 
@@ -38,6 +37,8 @@ def calculate_metrics(history: pd.DataFrame, config: StrategyConfig) -> dict:
     drawdown, peak_distance = rebound_metrics(
         history.tail(config.rebound_days), config.trend_days
     )
+    ma20_window = history.tail(config.ma20_touch_days)
+    ma20_touch = ma20_window["low"] <= ma20_window["ma20"]
     return {
         "ma5_up_ratio": float(recent["ma5_up"].mean()),
         "bullish_ma_ratio": float(bullish.mean()),
@@ -50,7 +51,6 @@ def calculate_metrics(history: pd.DataFrame, config: StrategyConfig) -> dict:
         "max_amplitude": float(recent["amplitude"].max()),
         "last_return": float(last["daily_return"]),
         "last_ma5_distance": float(last["close"] / last["ma5"] - 1),
-        "limit_up_count": int(history["limit_up_hit"].tail(config.activity_days).sum()),
         "max_limit_run": longest_limit_run(
             history["limit_up_hit"].tail(config.consecutive_limit_days)
         ),
@@ -58,6 +58,17 @@ def calculate_metrics(history: pd.DataFrame, config: StrategyConfig) -> dict:
         "acceleration_return": tail_return,
         "prior_drawdown": drawdown,
         "prior_peak_distance": peak_distance,
+        "is_rebound": bool(
+            drawdown >= config.rebound_min_drawdown
+            and peak_distance <= config.rebound_peak_tolerance
+        ),
+        "min_low_ma20_distance": float(
+            (ma20_window["low"] / ma20_window["ma20"] - 1).min()
+        ),
+        "ma20_touch_count": int(ma20_touch.sum()),
+        "ma20_touch_dates": "、".join(
+            ma20_window.loc[ma20_touch, "date"].dt.strftime("%Y-%m-%d")
+        ),
         "recent_trading": bool(
             (recent["volume"] > 0).all()
             and np.isfinite(recent[["open", "high", "low", "close"]]).all().all()
@@ -99,14 +110,10 @@ def evaluate_rules(metrics: dict, config: StrategyConfig) -> dict[str, bool]:
             metrics["last_return"] <= config.max_last_return
             and metrics["last_ma5_distance"] <= config.max_last_ma5_distance
         ),
-        "activity": metrics["limit_up_count"] >= config.min_limit_up_count,
         "no_limit_streak": metrics["max_limit_run"] <= config.max_consecutive_limit_up,
         "no_acceleration": not (
             metrics["acceleration_ratio"] > config.max_acceleration_ratio
             and metrics["acceleration_return"] > config.acceleration_min_return
         ),
-        "no_rebound": not (
-            metrics["prior_drawdown"] >= config.rebound_min_drawdown
-            and metrics["prior_peak_distance"] <= config.rebound_peak_tolerance
-        ),
+        "no_touch_ma20": metrics["ma20_touch_count"] == 0,
     }

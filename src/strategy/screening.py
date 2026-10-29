@@ -51,6 +51,48 @@ def eligibility_reason(
     return ""
 
 
+def diagnose_stock(
+    instrument: pd.Series,
+    bars: pd.DataFrame,
+    factors: pd.DataFrame,
+    date: pd.Timestamp,
+    market_dates: pd.Series,
+    config: StrategyConfig,
+) -> tuple[dict, pd.DataFrame | None]:
+    """共用单股资格与规则诊断；历史报告和全市场筛选调用同一实现。"""
+    bars = bars.loc[bars["date"] <= date].sort_values("date")
+    recent_dates = market_dates.loc[market_dates <= date].tail(config.trend_days)
+    reason = eligibility_reason(instrument, bars, date, config)
+    # 日历和行情的Parquet时间精度可能不同，比较日期值而不是dtype。
+    if (
+        not reason
+        and bars["date"].tail(config.trend_days).tolist() != recent_dates.tolist()
+    ):
+        reason = "近期缺少交易日日线"
+    row = {
+        "order_book_id": instrument["order_book_id"],
+        "symbol": instrument["symbol"],
+        "eligible": not bool(reason),
+        "selected": False,
+        "failed_count": len(RULE_LABELS) + 1,
+        "failed_rules": reason,
+    }
+    if reason:
+        return row, None
+    history = prepare_history(bars, factors, date)
+    metrics = calculate_metrics(history, config)
+    rules = evaluate_rules(metrics, config)
+    failures = [RULE_LABELS[name] for name, passed in rules.items() if not passed]
+    row.update(metrics)
+    row.update({f"pass_{name}": passed for name, passed in rules.items()})
+    row.update(
+        selected=not failures,
+        failed_count=len(failures),
+        failed_rules="；".join(failures),
+    )
+    return row, history
+
+
 def screen_market(
     bars: pd.DataFrame,
     factors: pd.DataFrame,
@@ -62,42 +104,22 @@ def screen_market(
     bars = bars.loc[bars["date"] <= date]
     grouped_bars = dict(tuple(bars.groupby("order_book_id", sort=False)))
     grouped_factors = dict(tuple(factors.groupby("order_book_id", sort=False)))
-    recent_dates = bars["date"].drop_duplicates().sort_values().tail(config.trend_days)
+    market_dates = bars["date"].drop_duplicates().sort_values()
     rows, histories = [], {}
     for _, instrument in instruments.iterrows():
         symbol = instrument["order_book_id"]
         stock_bars = grouped_bars.get(symbol, bars.iloc[:0])
-        reason = eligibility_reason(instrument, stock_bars, date, config)
-        if not reason and not stock_bars["date"].sort_values().tail(
-            config.trend_days
-        ).reset_index(drop=True).equals(recent_dates.reset_index(drop=True)):
-            reason = "近期缺少交易日日线"
-        row = {
-            "order_book_id": symbol,
-            "symbol": instrument["symbol"],
-            "eligible": not bool(reason),
-            "selected": False,
-            "failed_count": len(RULE_LABELS) + 1,
-            "failed_rules": reason,
-        }
-        if reason:
-            rows.append(row)
-            continue
-        history = prepare_history(
-            stock_bars, grouped_factors.get(symbol, factors.iloc[:0]), date
-        )
-        metrics = calculate_metrics(history, config)
-        rules = evaluate_rules(metrics, config)
-        failures = [RULE_LABELS[name] for name, passed in rules.items() if not passed]
-        row.update(metrics)
-        row.update({f"pass_{name}": passed for name, passed in rules.items()})
-        row.update(
-            selected=not failures,
-            failed_count=len(failures),
-            failed_rules="；".join(failures),
+        row, history = diagnose_stock(
+            instrument,
+            stock_bars,
+            grouped_factors.get(symbol, factors.iloc[:0]),
+            date,
+            market_dates,
+            config,
         )
         rows.append(row)
-        histories[symbol] = history
+        if history is not None:
+            histories[symbol] = history
     diagnostics = pd.DataFrame(rows).sort_values(
         ["failed_count", "order_book_id"], kind="stable"
     )

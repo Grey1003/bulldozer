@@ -9,9 +9,9 @@ import pytest
 def market_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """构造平缓爬坡、近期有单次涨停且无连板的股票。"""
     dates = pd.bdate_range("2025-01-02", periods=160)
-    close = 10 * 1.005 ** np.arange(len(dates))
-    close[-12:] *= 1.1 / 1.005
-    previous = np.r_[10 / 1.005, close[:-1]]
+    close = 10 * 1.012 ** np.arange(len(dates))
+    close[-12:] *= 1.1 / 1.012
+    previous = np.r_[10 / 1.012, close[:-1]]
     bars = pd.DataFrame(
         {
             "order_book_id": "000001.XSHE",

@@ -20,15 +20,7 @@ def run_screen(settings: Settings, requested: str) -> Path:
     store = DataStore(Path(settings.data.root))
     date = store.resolve_date(requested)
     config = settings.strategy
-    bars_needed = max(
-        settings.report.chart_bars + 60,
-        config.min_history_bars,
-        config.rebound_days,
-        config.trend_days + 60,
-        config.activity_days,
-        config.consecutive_limit_days,
-    )
-    bars = store.read_window(date, bars_needed)
+    bars = store.read_window(date, settings.history_bars)
     factors = store.read_factors(date)
     instruments = pd.read_parquet(store.root / "instruments.parquet")
     logger.info("研究日 %s，读取 %s 行日线", date.date(), len(bars))

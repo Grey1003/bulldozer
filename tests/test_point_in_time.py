@@ -46,7 +46,7 @@ def test_adjustment_only_applies_on_effective_date(market_data: tuple) -> None:
     before = prepare_history(bars, factors, bars["date"].iloc[-4])
     after = prepare_history(bars, factors, bars["date"].max())
     assert before["close"].iloc[-1] == pytest.approx(bars["close"].iloc[-4])
-    assert after["close"].iloc[-3] / after["close"].iloc[-4] == pytest.approx(1.005)
+    assert after["close"].iloc[-3] / after["close"].iloc[-4] == pytest.approx(1.012)
 
 
 def test_weekend_and_out_of_range(tmp_path: Path) -> None:
